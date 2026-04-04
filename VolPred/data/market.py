@@ -85,6 +85,30 @@ class CommData:
         df = df.set_index("date").sort_index()
         return df
 
+    def _resolve_json_path(self, json_filename: str = None) -> str:
+        """
+        Resolves which JSON file to use from the model directory.
+        If json_filename is not provided, picks the most recently modified .json file.
+        """
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        model_dir = os.path.join(project_root, "model")
+
+        if json_filename:
+            input_file = os.path.join(model_dir, json_filename)
+            if not os.path.exists(input_file):
+                raise FileNotFoundError(f"No JSON data file found at {input_file}")
+            return input_file
+
+        json_files = [
+            os.path.join(model_dir, file_name)
+            for file_name in os.listdir(model_dir)
+            if file_name.endswith(".json")
+        ]
+        if not json_files:
+            raise FileNotFoundError(f"No JSON files found in {model_dir}")
+
+        return max(json_files, key=os.path.getmtime)
+
     def train_test_split(self, df: pd.DataFrame, test_size: float = 0.2):
         """
         Splits a time-ordered dataframe into train and test sets.
@@ -102,16 +126,11 @@ class CommData:
         test_df = df.iloc[split_index:].copy()
         return train_df, test_df
 
-    def createModel(self, test_size: float = 0.2):
+    def createModel(self, test_size: float = 0.2, json_filename: str = None):
         """
         Creates a GARCH model
         """
-        project_root = os.path.dirname(os.path.dirname(__file__))
-        model_dir = os.path.join(project_root, "model")
-        input_file = os.path.join(model_dir, f"{self.function}_{self.interval}.json")
-
-        if not os.path.exists(input_file):
-            raise FileNotFoundError(f"No JSON data file found at {input_file}")
+        input_file = self._resolve_json_path(json_filename)
 
         df = self.read_json_to_df(input_file)
         train_df, _ = self.train_test_split(df, test_size=test_size)
@@ -146,25 +165,37 @@ class CommData:
         if returns.empty:
             raise ValueError("Not enough valid close-price data in test set to evaluate model")
 
-        forecasts = model.forecast(horizon=len(returns))
-        predicted_volatility = forecasts.variance.iloc[-1].values
+        # Rolling one-step-ahead variance forecasts over the test window.
+        train_returns = pd.Series(model.model.y).dropna().reset_index(drop=True)
+        test_returns = returns.reset_index(drop=True)
 
-        actual_volatility = returns ** 2
-        mse = ((predicted_volatility - actual_volatility) ** 2).mean()
-        mae = (predicted_volatility - actual_volatility).abs().mean()
+        predicted_variance = []
+        history = train_returns.copy()
+        for observed_return in test_returns:
+            rolling_model = arch_model(history, vol="GARCH", p=1, q=1, dist="normal")
+            rolling_fit = rolling_model.fit(disp="off")
+            next_var = rolling_fit.forecast(horizon=1).variance.iloc[-1, 0]
+            predicted_variance.append(next_var)
+            history = pd.concat([history, pd.Series([observed_return])], ignore_index=True)
+
+        actual_variance = (test_returns ** 2).to_numpy()
+        pred_variance = pd.Series(predicted_variance).to_numpy()
+
+        mse = float(((pred_variance - actual_variance) ** 2).mean())
+        mae = float((pd.Series(pred_variance - actual_variance).abs()).mean())
 
         return {"MSE": mse, "MAE": mae}
 
-"""
+
 if __name__ == "__main__":
     comm_data = CommData(function="BRENT", interval="daily")
-    #df = comm_data.fetch_data()
-    df = comm_data.read_json_to_df("/home/vik/garch/VolPred/model/BRENT_daily.json")
+    json_path = comm_data._resolve_json_path()
+    df = comm_data.read_json_to_df(json_path)
     train_df, test_df = comm_data.train_test_split(df)
-    print(train_df.tail())
-    print(test_df.tail())
-    #model = comm_data.createModel()
+    model = comm_data.createModel()
+    metrics = comm_data.metrics(model, test_df)
+    print(metrics)
+    print(model.summary())
     #print(comm_data.metrics(model, test_df))
     #model = comm_data.createModel()
     #print(model.summary())
-"""

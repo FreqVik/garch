@@ -1,0 +1,57 @@
+2026-04-04 19:55:27 - main - INFO - Starting up application
+2026-04-04 19:55:29 - main - INFO - Database tables created
+2026-04-04 19:55:30 - scheduler - INFO - Registered daily prediction task at 18:00 UTC
+2026-04-04 19:55:30 - scheduler - ERROR - Failed to start scheduler: IntervalTrigger.__init__() got an unexpected keyword argument 'hour'
+Traceback (most recent call last):
+  File "/home/vik/garch/VolPred/utils/scheduler.py", line 45, in start
+    IntervalTrigger(days=RETRAIN_INTERVAL_DAYS, hour=RETRAIN_HOUR),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: IntervalTrigger.__init__() got an unexpected keyword argument 'hour'
+2026-04-04 19:55:30 - main - ERROR - Startup error: IntervalTrigger.__init__() got an unexpected keyword argument 'hour'
+Traceback (most recent call last):
+  File "/home/vik/garch/VolPred/main.py", line 48, in startup_event
+    init_scheduler()
+  File "/home/vik/garch/VolPred/utils/scheduler.py", line 105, in init_scheduler
+    scheduler.start()
+  File "/home/vik/garch/VolPred/utils/scheduler.py", line 45, in start
+    IntervalTrigger(days=RETRAIN_INTERVAL_DAYS, hour=RETRAIN_HOUR),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: IntervalTrigger.__init__() got an unexpected keyword argument 'hour'
+2026-04-04 19:56:39 - main - INFO - Starting up application
+2026-04-04 19:56:39 - main - INFO - Database tables created
+2026-04-04 19:56:39 - scheduler - INFO - Registered daily prediction task at 18:00 UTC
+2026-04-04 19:56:39 - scheduler - INFO - Registered 10-day retraining task (interval: 10 days)
+2026-04-04 19:56:39 - scheduler - INFO - Background task scheduler started
+2026-04-04 19:56:39 - main - INFO - Background task scheduler started
+2026-04-04 20:00:09 - main - ERROR - Error fetching predictions: 404: No predictions found
+2026-04-04 20:09:30 - main - INFO - Shutting down application
+2026-04-04 20:09:30 - scheduler - INFO - Background task scheduler stopped
+2026-04-04 20:09:30 - main - INFO - Background task scheduler stopped
+2026-04-04 20:10:50 - main - INFO - Starting up application
+2026-04-04 20:10:50 - main - INFO - Database tables created
+2026-04-04 20:10:50 - scheduler - INFO - Registered daily prediction task at 18:00 UTC
+2026-04-04 20:10:50 - scheduler - INFO - Registered 10-day retraining task (interval: 10 days)
+2026-04-04 20:10:50 - scheduler - INFO - Background task scheduler started
+2026-04-04 20:10:50 - main - INFO - Background task scheduler started
+2026-04-04 20:11:03 - main - ERROR - Error fetching predictions: 404: No predictions found
+2026-04-04 20:16:34 - main - INFO - Shutting down application
+2026-04-04 20:16:34 - scheduler - INFO - Background task scheduler stopped
+2026-04-04 20:16:34 - main - INFO - Background task scheduler stopped
+2026-04-04 20:16:38 - main - INFO - Starting up application
+2026-04-04 20:16:38 - main - INFO - Database tables created
+2026-04-04 20:16:38 - scheduler - INFO - Registered daily prediction task at 18:00 UTC
+2026-04-04 20:16:38 - scheduler - INFO - Registered 10-day retraining task (interval: 10 days)
+2026-04-04 20:16:38 - scheduler - INFO - Background task scheduler started
+2026-04-04 20:16:38 - main - INFO - Background task scheduler started
+2026-04-04 20:38:26 - main - INFO - Shutting down application
+2026-04-04 20:38:26 - scheduler - INFO - Background task scheduler stopped
+2026-04-04 20:38:26 - main - INFO - Background task scheduler stopped
+2026-04-04 20:38:30 - main - INFO - Starting up application
+2026-04-04 20:38:30 - main - INFO - Database tables created
+2026-04-04 20:38:30 - scheduler - INFO - Registered daily prediction task at 18:00 UTC
+2026-04-04 20:38:30 - scheduler - INFO - Registered 10-day retraining task (interval: 10 days)
+2026-04-04 20:38:30 - scheduler - INFO - Background task scheduler started
+2026-04-04 20:38:30 - main - INFO - Background task scheduler started
+2026-04-04 20:45:15 - main - INFO - Shutting down application
+2026-04-04 20:45:15 - scheduler - INFO - Background task scheduler stopped
+2026-04-04 20:45:15 - main - INFO - Background task scheduler stopped

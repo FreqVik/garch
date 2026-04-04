@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "generated_at": "2026-04-04T19:01:47.965356+00:00",
+    "historical_days": 90,
+    "commodity": "BRENT",
+    "currency": "USD"
+  },
+  "actual_values": [],
+  "predictions": [],
+  "summary": {
+    "total_data_points": 0,
+    "total_predictions": 0,
+    "date_range": {
+      "start": null,
+      "end": null
+    }
+  }
+}

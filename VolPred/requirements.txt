@@ -2,4 +2,9 @@ httpx
 arch
 joblib
 pandas
-dotenv
+numpy
+python-dotenv
+fastapi
+uvicorn
+apscheduler
+sqlalchemy
