@@ -88,7 +88,8 @@ class CommData:
     def _resolve_json_path(self, json_filename: str = None) -> str:
         """
         Resolves which JSON file to use from the model directory.
-        If json_filename is not provided, picks the most recently modified .json file.
+        If json_filename is not provided, picks the most recently modified .json file
+        that contains price data (excludes volatility.json and chart_data.json).
         """
         project_root = os.path.dirname(os.path.dirname(__file__))
         model_dir = os.path.join(project_root, "model")
@@ -99,13 +100,16 @@ class CommData:
                 raise FileNotFoundError(f"No JSON data file found at {input_file}")
             return input_file
 
+        # Exclude volatility and chart data files
         json_files = [
             os.path.join(model_dir, file_name)
             for file_name in os.listdir(model_dir)
-            if file_name.endswith(".json")
+            if file_name.endswith(".json") 
+            and "volatility" not in file_name.lower()
+            and "chart" not in file_name.lower()
         ]
         if not json_files:
-            raise FileNotFoundError(f"No JSON files found in {model_dir}")
+            raise FileNotFoundError(f"No price JSON files found in {model_dir}")
 
         return max(json_files, key=os.path.getmtime)
 
@@ -152,6 +156,84 @@ class CommData:
 
         return fitted_model
 
+    def calculate_rolling_volatility(self, df: pd.DataFrame, window: int = 20) -> pd.DataFrame:
+        """
+        Calculate rolling volatility (standard deviation of returns).
+        
+        Args:
+            df: DataFrame with 'value' column (prices)
+            window: Rolling window size in days (default 20 ≈ 1 month)
+            
+        Returns:
+            DataFrame with 'volatility' column added
+        """
+        if df.empty:
+            raise ValueError("DataFrame is empty")
+        
+        returns = df["value"].pct_change() * 100  # Percentage returns
+        volatility = returns.rolling(window=window).std()
+        
+        result = df.copy()
+        result["volatility"] = volatility
+        return result
+
+    def generate_volatility_json(self, json_filename: str = None, output_filename: str = None, window: int = 20) -> str:
+        """
+        Generate volatility JSON file from price data.
+        
+        Args:
+            json_filename: Input JSON file name (if None, uses most recent)
+            output_filename: Output JSON file name (if None, defaults to volatility.json)
+            window: Rolling window for volatility calculation
+            
+        Returns:
+            Path to the generated JSON file
+        """
+        input_file = self._resolve_json_path(json_filename)
+        
+        # Read price data
+        df = self.read_json_to_df(input_file)
+        
+        # Calculate volatility
+        vol_df = self.calculate_rolling_volatility(df, window=window)
+        
+        # Reset index and prepare data
+        vol_df = vol_df.reset_index()
+        vol_df.columns = ["date", "value", "volatility"]
+        
+        data_list = []
+        for _, row in vol_df.iterrows():
+            data_list.append({
+                "date": row["date"].strftime("%Y-%m-%d"),
+                "value": float(row["value"]),
+                "volatility": float(row["volatility"]) if pd.notna(row["volatility"]) else None
+            })
+        
+        # Create output structure
+        output_data = {
+            "name": f"{self.function} Volatility",
+            "interval": self.interval,
+            "unit": "percentage",
+            "volatility_type": "rolling_standard_deviation",
+            "window_days": window,
+            "generated_at": datetime.now().isoformat(),
+            "data": data_list
+        }
+        
+        # Determine output path
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        model_dir = os.path.join(project_root, "model")
+        if output_filename is None:
+            output_path = os.path.join(model_dir, "volatility.json")
+        else:
+            output_path = os.path.join(model_dir, output_filename)
+        
+        os.makedirs(model_dir, exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(output_data, f, indent=2)
+        
+        return output_path
+
     def metrics(self, model, test_df: pd.DataFrame):
         """
         Evaluates the GARCH model on the test set and returns performance metrics.
@@ -186,7 +268,7 @@ class CommData:
 
         return {"MSE": mse, "MAE": mae}
 
-
+"""
 if __name__ == "__main__":
     comm_data = CommData(function="BRENT", interval="daily")
     json_path = comm_data._resolve_json_path()
@@ -199,3 +281,4 @@ if __name__ == "__main__":
     #print(comm_data.metrics(model, test_df))
     #model = comm_data.createModel()
     #print(model.summary())
+"""

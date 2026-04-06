@@ -9,8 +9,9 @@ import json
 from utils.scheduler import init_scheduler, shutdown_scheduler, get_scheduler
 from utils.logger import setup_logger
 from predict.services import PredictionService
-from predict.db import create_tables
 from utils.tasks import get_retraining_metadata
+from dashboard.db import init_db as init_dashboard_db
+from dashboard.routes import router as dashboard_router
 
 logger = setup_logger("main")
 
@@ -33,6 +34,9 @@ app.add_middleware(
 # Initialize services
 prediction_service = PredictionService()
 
+# Include dashboard routes
+app.include_router(dashboard_router)
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -40,9 +44,9 @@ async def startup_event():
     try:
         logger.info("Starting up application")
         
-        # Create database tables
-        create_tables()
-        logger.info("Database tables created")
+        # Initialize dashboard database (includes all tables)
+        init_dashboard_db()
+        logger.info("Dashboard database initialized")
         
         # Initialize and start scheduler
         init_scheduler()
